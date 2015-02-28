@@ -3,6 +3,14 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+# Sublime #
+*.sublime-project
+*.sublime-workspace
+
+# Eclipse
+*.project
+*.classpath
+
 # Package Files #
 *.jar
 *.war

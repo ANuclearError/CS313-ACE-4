@@ -1,0 +1,20 @@
+CS313-ACE-4 VERSION HISTORY
+
+================================================================================
+
+Version 0.0: Experimentation
+Commenced:   28/02/2015
+Finished:    -
+
+--------------------------------------------------------------------------------
+
+	v0.0 - 28/02/2015
+
+		After creating the private Git repo for this project. I decided that it
+		would be best to get started right away on the two documents that were
+		uploaded to Myplace:
+			- Programming Assignment 1: Building a Multi-Threaded Web Server
+			- Programming Assignment 7: Streaming Video with RTSP and RTP
+		Since there was no offcial specification for the assignment, it was
+		decided to do as much of this in order to make the actual assignment
+		easier.	
