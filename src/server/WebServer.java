@@ -1,6 +1,9 @@
 package server;
 
+import java.io.IOException;
 import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The WebServer class is the main class of the system. It contains the main
@@ -12,33 +15,58 @@ import java.net.*;
  * @since 0.1
  *
  */
-public final class WebServer {
+public final class WebServer implements Runnable {
 	
 	static final int PORT = 6789;
 	
-	/**
-	 * Main method for stuff
-	 * @param args - command line arguments
-	 * @throws Exception
-	 */
-	public static void main(String args[]) throws Exception{
+	private boolean running = true;
+	
+	private ServerSocket socket;
+	
+	private ExecutorService threadPool;
+
+	
+	@Override
+	public void run() {
 		System.out.println("CS313-ACE-4 Web Server");
 		System.out.println("Author: Aidan O'Grady (201218150)");
 		
-		try{
-			ServerSocket socket = new ServerSocket(PORT);
+		open();
+		listen();
+	}
+	
+	private void open(){
+		try {
+			socket = new ServerSocket(PORT);
 			System.out.println("Opening server");
-			
-			while(true){
+			threadPool = Executors.newCachedThreadPool();
+		} catch (IOException e) {
+			System.out.println("Open bugger");
+			e.printStackTrace();
+		}
+	}
+	
+	private void listen(){
+		while(running){
+			try {
 				Socket client = socket.accept(); // Connection found
-				System.out.println("\nConnection found");
-				HttpRequest request = new HttpRequest(client);
-				Thread thread = new Thread(request);
-				thread.start();
+				System.out.println("\nConnection found");				
+				threadPool.execute(new HttpRequest(client));
+			} catch (Exception e) {
+				System.out.println("Listen bugger");
+				e.printStackTrace();
 			}
-		} catch (Exception e){
-			// TODO refine exception catching once I see what gets excepted.
-			System.out.println("Bugger");
+		}
+	}
+	
+	public void close(){
+		running = false;
+		try {
+			threadPool.shutdown();
+			socket.close();
+			System.out.println("Closing Server");
+		} catch (IOException e) {
+			System.out.println("There was a problem closing the server.");
 			e.printStackTrace();
 		}
 	}

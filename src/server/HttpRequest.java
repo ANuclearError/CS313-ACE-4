@@ -112,6 +112,7 @@ public class HttpRequest implements Runnable{
 		}
 		os.close();
 		br.close();
+		System.out.println("Closing socket");
 		socket.close();
 	}
 		
