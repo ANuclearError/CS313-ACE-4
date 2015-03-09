@@ -35,7 +35,7 @@ public class HttpRequest implements Runnable{
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+
 		try{
 			processRequest();
 		} catch (Exception e){
@@ -60,17 +60,18 @@ public class HttpRequest implements Runnable{
 		
 		System.out.println("\nHeader Lines:\n========");
 		String headerLine = br.readLine();
-		while(headerLine != null){
+		while(!headerLine.equals("")){
 			System.out.println(headerLine);
 			headerLine = br.readLine();
-		}		
+		}
+		
 		// Extract filename from the request line
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip method
 		String fileName = tokens.nextToken();
 		
 		fileName = "." + fileName;
-		
+				
 		FileInputStream fis = null;
 		boolean fileExists = true;
 		try{
@@ -82,12 +83,13 @@ public class HttpRequest implements Runnable{
 		String statusLine = null;
 		String contentTypeLine = null;
 		String entityBody = null;
+		
 		if(fileExists){
 			statusLine = "HTTP/1.1 200 OK";
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 		} else{
 			statusLine = "HTTP/1.1 404 Not Found";
-			contentTypeLine = "text/html";
+			contentTypeLine = "Content-type: text/html" + CRLF;
 			entityBody = "<HTML>" + "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
 					"<BODY>Not Found</BODY></HTML>";
 		}
@@ -97,7 +99,9 @@ public class HttpRequest implements Runnable{
 		System.out.println(statusLine);
 		System.out.println(contentTypeLine);
 		os.writeBytes(statusLine);
+		System.out.println("Writing status line");
 		os.writeBytes(contentTypeLine);
+		System.out.println("Writing content type");
 		os.writeBytes(CRLF);
 		
 		if(fileExists){

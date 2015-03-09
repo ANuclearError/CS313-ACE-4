@@ -28,4 +28,5 @@ Finished:    -
 	v0.2 - 09/03/2015
 	
 		Realised I've just to use localhost for it, derp. Moved the HttpRequest
-		stuff into it's own class, makes more sense to me.
+		stuff into it's own class, makes more sense to me. Fixed the general
+		stupidity.
