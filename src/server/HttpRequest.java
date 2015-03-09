@@ -15,8 +15,8 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 0.0
- * @since 0.0
+ * @version 0.2
+ * @since 0.2
  *
  */
 public class HttpRequest implements Runnable{

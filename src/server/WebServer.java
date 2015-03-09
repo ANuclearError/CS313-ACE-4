@@ -1,8 +1,6 @@
 package server;
 
-import java.io.*;
 import java.net.*;
-import java.util.*;
 
 /**
  * The WebServer class is the main class of the system. It contains the main
@@ -10,8 +8,8 @@ import java.util.*;
  * sent. The port field defines which port the server is listening on.
  * 
  * @author Aidan O'Grady
- * @version 0.0
- * @since 0.0
+ * @version 0.2
+ * @since 0.1
  *
  */
 public final class WebServer {

@@ -24,3 +24,8 @@ Finished:    -
 		Implemented Part A of Assignment 1, but it needs to be tested. I'm
 		currently unsure as to if DEVWEB will be required for this part or not,
 		due to how the document describes the assignment at hand.
+	
+	v0.2 - 09/03/2015
+	
+		Realised I've just to use localhost for it, derp. Moved the HttpRequest
+		stuff into it's own class, makes more sense to me.
