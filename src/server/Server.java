@@ -6,7 +6,7 @@ package server;
  * server will gracefully close.
  * 
  * @author Aidan O'Grady
- * @version 0.4
+ * @version 0.3
  * @since 0.3
  *
  */
