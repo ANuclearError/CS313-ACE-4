@@ -11,18 +11,30 @@ import java.util.concurrent.Executors;
  * sent. The port field defines which port the server is listening on.
  * 
  * @author Aidan O'Grady
- * @version 0.2
+ * @version 0.4
  * @since 0.1
  *
  */
 public final class WebServer implements Runnable {
 	
+	/**
+	 * The port for the server to listen to.
+	 */
 	static final int PORT = 6789;
 	
+	/**
+	 * A toggle for whether or not the server is actively listening.
+	 */
 	private boolean running = true;
 	
+	/**
+	 * The server socket, listening for incoming traffic
+	 */
 	private ServerSocket socket;
 	
+	/**
+	 * Thread pool used for handling threads nicely.
+	 */
 	private ExecutorService threadPool;
 
 	
@@ -35,6 +47,9 @@ public final class WebServer implements Runnable {
 		listen();
 	}
 	
+	/**
+	 * Creates a new ServerSocket and thread pool.
+	 */
 	private void open(){
 		try {
 			socket = new ServerSocket(PORT);
@@ -46,6 +61,9 @@ public final class WebServer implements Runnable {
 		}
 	}
 	
+	/**
+	 * Starts a loop that allows for the socket to accept requests constantly.
+	 */
 	private void listen(){
 		while(running){
 			try {
@@ -57,10 +75,13 @@ public final class WebServer implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		close();
 	}
 	
-	public void close(){
-		running = false;
+	/**
+	 * Gracefully closes down the server when requested.
+	 */
+	private void close(){
 		try {
 			threadPool.shutdown();
 			socket.close();
@@ -69,5 +90,13 @@ public final class WebServer implements Runnable {
 			System.out.println("There was a problem closing the server.");
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * When invoked, sets the running flag to alert that the server is to be
+	 * closed.
+	 */
+	public void quit(){
+		running = false;
 	}
 }
