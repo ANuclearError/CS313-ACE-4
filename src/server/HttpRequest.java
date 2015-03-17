@@ -76,9 +76,8 @@ public class HttpRequest implements Runnable{
 		os = new DataOutputStream(socket.getOutputStream());
 		InputStream is = socket.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
-		BufferedReader br = new BufferedReader(isr);
 		
-		String requestLine = readRequest(br);
+		String requestLine = readRequest(new BufferedReader(isr));
 		
 		// Extract filename from the request line
 		String fileName = getFileName(requestLine);
@@ -97,7 +96,7 @@ public class HttpRequest implements Runnable{
 		}
 		
 		sendResponse(statusLine, contentTypeLine);
-		close(br);
+		close();
 	}
 	
 	
@@ -218,13 +217,11 @@ public class HttpRequest implements Runnable{
 	
 	/**
 	 * Shut down the socket, it's no longer needed.
-	 * @param br - buffered reader.
 	 * @throws Exception
 	 */
-	private void close(BufferedReader br) throws Exception{
+	private void close() throws Exception{
 		// Close everything
 		fis.close();
-		br.close();
 		os.close();
 		System.out.println("Closing socket");
 		socket.close();
