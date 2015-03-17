@@ -24,7 +24,9 @@ public class HttpRequest implements Runnable{
 	/**
 	 * Ensures proper returns when sending data over.
 	 */
-	final static String CRLF = "\r\n";
+	private final static String CRLF = "\r\n";
+	
+	private final static String FILENOTFOUND = "files/404.html";
 	
 	/**
 	 * The client being processed.
@@ -62,37 +64,29 @@ public class HttpRequest implements Runnable{
 		InputStream is = socket.getInputStream();
 		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 		InputStreamReader isr = new InputStreamReader(is);
+		
 		BufferedReader br = new BufferedReader(isr);
-		
-		String requestLine = br.readLine();
-		System.out.println("\nRequest Line:\n========");
-		System.out.println(requestLine);
-		
-		System.out.println("\nHeader Lines:\n========");
-		String headerLine = br.readLine();
-		while(!headerLine.equals("")){
-			System.out.println(headerLine);
-			headerLine = br.readLine();
-		}
+		String requestLine = readRequest(br);
 		
 		// Extract filename from the request line
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip method
 		String fileName = tokens.nextToken();
 		
-		fileName = "." + fileName;
+		// Ensures any files searched for are within this directory.
+		fileName = "files/" + fileName;
 				
 		FileInputStream fis = null;
 		boolean fileExists = true;
 		try{
 			fis = new FileInputStream(fileName);
 		} catch(FileNotFoundException e){
+			fis = new FileInputStream(FILENOTFOUND);
 			fileExists = false;
 		}
 		
 		String statusLine = null;
 		String contentTypeLine = null;
-		String entityBody = null;
 		
 		if(fileExists){
 			statusLine = "HTTP/1.1 200 OK";
@@ -100,8 +94,6 @@ public class HttpRequest implements Runnable{
 		} else{
 			statusLine = "HTTP/1.1 404 Not Found";
 			contentTypeLine = "Content-type: text/html" + CRLF;
-			entityBody = "<HTML>" + "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
-					"<BODY>Not Found</BODY></HTML>";
 		}
 
 		
@@ -114,16 +106,47 @@ public class HttpRequest implements Runnable{
 		System.out.println("Writing content type");
 		os.writeBytes(CRLF);
 		
-		if(fileExists){
-			sendBytes(fis, os);
-			fis.close();
-		}else{
-			os.writeBytes(entityBody);
-		}
-		os.close();
+		sendBytes(fis, os);
+		fis.close();
 		br.close();
+		os.close();
 		System.out.println("Closing socket");
 		socket.close();
+	}
+	
+	/**
+	 * Reads the incoming request and displays the request line along with the
+	 * header lines, and then returns the request line so it can be used later
+	 * on.
+	 * 
+	 * @param isr - The reader of the request
+	 * @return requestLine
+	 * @throws Exception
+	 */
+	private String readRequest(BufferedReader br) throws Exception{
+		String requestLine = br.readLine();
+		System.out.println("\nRequest Line:\n========");
+		System.out.println(requestLine);
+		System.out.println("\nHeader Lines:\n========");
+		String headerLine = br.readLine();
+		while(!headerLine.equals("")){
+			System.out.println(headerLine);
+			headerLine = br.readLine();
+		}
+		return requestLine;
+	}
+	
+	/**
+	 * Returns the related MIME type given a file name.
+	 * 
+	 * @param fileName - the file whose MIME type is to be determined
+	 * @return MIME type
+	 */
+	private String contentType(String fileName){
+		if(fileName.endsWith(".htm") || fileName.endsWith(".html")){
+			return "text/html";
+		}
+		return "application/octet-stream";
 	}
 	
 	/**
@@ -143,18 +166,5 @@ public class HttpRequest implements Runnable{
 			os.write(buffer, 0, bytes);
 		}
 		
-	}
-
-	/**
-	 * Returns the related MIME type given a file name.
-	 * 
-	 * @param fileName - the file whose MIME type is to be determined
-	 * @return MIME type
-	 */
-	private String contentType(String fileName){
-		if(fileName.endsWith(".htm") || fileName.endsWith(".html")){
-			return "text/html";
-		}
-		return "application/octet-stream";
 	}
 }
