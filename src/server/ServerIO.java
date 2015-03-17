@@ -7,7 +7,7 @@ import java.util.Scanner;
  * This is primarily to allow for closing to be done nicer.
  * 
  * @author Aidan O'Grady
- * @version 0.3
+ * @version 1.0
  * @since 0.3
  *
  */

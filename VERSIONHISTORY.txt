@@ -2,9 +2,9 @@ CS313-ACE-4 VERSION HISTORY
 
 ================================================================================
 
-Version 0.0: Experimentation
+Version 0.0: Basic Multithreaded Web Server
 Commenced:   28/02/2015
-Finished:    -
+Finished:    17/03/2015
 
 --------------------------------------------------------------------------------
 
@@ -36,4 +36,14 @@ Finished:    -
 		Created the ServerIO class, which allows me to handle closing everything
 		down better. This class and the WebServer are run concurrently to allow
 		for smooth listening etc. The Server class allows for managing both
-		these classes side by side, with the new Driver creating it all.
+		these classes side by side, with the new Driver creating it all. 
+
+
+	v1.0 - 17/03/2015
+
+		Extensive refactoring of HttpRequest and the addition of an index.html
+		file just to makes thing a bit nicer and such. So right now pretty much
+		all I have is a web server. Which is kinda nice I suppose. Now I need
+		to make it a caching proxy server, horray.
+
+--------------------------------------------------------------------------------

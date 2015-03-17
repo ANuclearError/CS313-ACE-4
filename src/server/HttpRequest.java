@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 0.4
+ * @version 1.0
  * @since 0.2
  *
  */
@@ -27,10 +27,15 @@ public class HttpRequest implements Runnable{
 	private final static String CRLF = "\r\n";
 	
 	/**
-	 * FIle not found, then display this. If this is missing then things will
+	 * File not found, then display this. If this is missing then things will
 	 * probably screw up badly.
 	 */
 	private final static String NOTFOUND = "files/404.html";
+	
+	/**
+	 * Home page, if there's no actual file in the request.
+	 */
+	private final static String INDEX = "index.html";
 		
 	/**
 	 * Input stream when receiving request
@@ -116,6 +121,8 @@ public class HttpRequest implements Runnable{
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip method
 		String fileName = tokens.nextToken();
+		if(fileName.equals("/"))
+			fileName = INDEX;
 		return fileName;
 	}
 	

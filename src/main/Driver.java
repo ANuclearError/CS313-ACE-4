@@ -7,7 +7,7 @@ import server.Server;
  * proper.
  * 
  * @author Aidan O'Grady
- * @version 0.3
+ * @version 1.0
  * @since 0.3
  *
  */
