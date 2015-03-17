@@ -58,13 +58,11 @@ public class HttpRequest implements Runnable{
 
 	@Override
 	public void run() {
-
 		try{
 			processRequest();
 		} catch (Exception e){
 			e.printStackTrace();
 		}
-		
 	}
 
 	/**
@@ -72,30 +70,16 @@ public class HttpRequest implements Runnable{
 	 * @throws Exception
 	 */
 	private void processRequest() throws Exception{
-		
 		os = new DataOutputStream(socket.getOutputStream());
 		InputStream is = socket.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
 		
 		String requestLine = readRequest(new BufferedReader(isr));
-		
 		// Extract filename from the request line
 		String fileName = getFileName(requestLine);
 		fileName = "files/" + fileName;
-				
-		boolean fileExists = fileExists(fileName);
-		
-		String statusLine = null;
-		String contentTypeLine = null;
-		if(fileExists){
-			statusLine = "HTTP/1.1 200 OK";
-			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
-		} else{
-			statusLine = "HTTP/1.1 404 Not Found";
-			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
-		}
-		
-		sendResponse(statusLine, contentTypeLine);
+						
+		respond(fileName);
 		close();
 	}
 	
@@ -133,6 +117,31 @@ public class HttpRequest implements Runnable{
 		tokens.nextToken(); // skip method
 		String fileName = tokens.nextToken();
 		return fileName;
+	}
+	
+	
+	/**
+	 * Handles the response to the socket, determining whether to send the
+	 * requested file or the 404 page in the case that the file does not exist.
+	 * 
+	 * @param fileName
+	 * @throws Exception
+	 */
+	private void respond(String fileName) throws Exception{
+		String statusLine = null;
+		String contentTypeLine = null;
+		
+		boolean fileExists = fileExists(fileName);
+		
+		if(fileExists){
+			statusLine = "HTTP/1.1 200 OK";
+			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
+		} else{
+			statusLine = "HTTP/1.1 404 Not Found";
+			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
+		}
+		
+		sendResponse(statusLine, contentTypeLine);
 	}
 	
 	
@@ -214,6 +223,7 @@ public class HttpRequest implements Runnable{
 			os.write(buffer, 0, bytes);
 		}
 	}
+	
 	
 	/**
 	 * Shut down the socket, it's no longer needed.
