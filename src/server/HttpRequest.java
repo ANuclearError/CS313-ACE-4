@@ -26,7 +26,21 @@ public class HttpRequest implements Runnable{
 	 */
 	private final static String CRLF = "\r\n";
 	
-	private final static String FILENOTFOUND = "files/404.html";
+	/**
+	 * FIle not found, then display this. If this is missing then things will
+	 * probably screw up badly.
+	 */
+	private final static String NOTFOUND = "files/404.html";
+		
+	/**
+	 * Input stream when receiving request
+	 */
+	private FileInputStream fis;
+	
+	/**
+	 * Output stream for sending responses
+	 */
+	private DataOutputStream os;
 	
 	/**
 	 * The client being processed.
@@ -48,7 +62,7 @@ public class HttpRequest implements Runnable{
 		try{
 			processRequest();
 		} catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		
 	}
@@ -59,60 +73,33 @@ public class HttpRequest implements Runnable{
 	 */
 	private void processRequest() throws Exception{
 		
-		//TODO refactor
-		
+		os = new DataOutputStream(socket.getOutputStream());
 		InputStream is = socket.getInputStream();
-		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 		InputStreamReader isr = new InputStreamReader(is);
-		
 		BufferedReader br = new BufferedReader(isr);
+		
 		String requestLine = readRequest(br);
 		
 		// Extract filename from the request line
-		StringTokenizer tokens = new StringTokenizer(requestLine);
-		tokens.nextToken(); // skip method
-		String fileName = tokens.nextToken();
-		
-		// Ensures any files searched for are within this directory.
+		String fileName = getFileName(requestLine);
 		fileName = "files/" + fileName;
 				
-		FileInputStream fis = null;
-		boolean fileExists = true;
-		try{
-			fis = new FileInputStream(fileName);
-		} catch(FileNotFoundException e){
-			fis = new FileInputStream(FILENOTFOUND);
-			fileExists = false;
-		}
+		boolean fileExists = fileExists(fileName);
 		
 		String statusLine = null;
 		String contentTypeLine = null;
-		
 		if(fileExists){
 			statusLine = "HTTP/1.1 200 OK";
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 		} else{
 			statusLine = "HTTP/1.1 404 Not Found";
-			contentTypeLine = "Content-type: text/html" + CRLF;
+			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
 		}
-
 		
-		System.out.println("\nResponse:\n========");
-		System.out.println(statusLine);
-		System.out.println(contentTypeLine);
-		os.writeBytes(statusLine);
-		System.out.println("Writing status line");
-		os.writeBytes(contentTypeLine);
-		System.out.println("Writing content type");
-		os.writeBytes(CRLF);
-		
-		sendBytes(fis, os);
-		fis.close();
-		br.close();
-		os.close();
-		System.out.println("Closing socket");
-		socket.close();
+		sendResponse(statusLine, contentTypeLine);
+		close(br);
 	}
+	
 	
 	/**
 	 * Reads the incoming request and displays the request line along with the
@@ -136,6 +123,42 @@ public class HttpRequest implements Runnable{
 		return requestLine;
 	}
 	
+	
+	/**
+	 * Returns the requested file name, extracted from the request line.
+	 * @param requestLine - the request line containing the file name.
+	 * @return fileName
+	 */
+	private String getFileName(String requestLine){
+		StringTokenizer tokens = new StringTokenizer(requestLine);
+		tokens.nextToken(); // skip method
+		String fileName = tokens.nextToken();
+		return fileName;
+	}
+	
+	
+	/**
+	 * Returns whether or not the file exists, and creates the appropriate
+	 * file input stream.
+	 * 
+	 * Right now, the 404 page being lost will probably mess things up, throwing
+	 * an exception.
+	 * 
+	 * @param fileName - the file to be looked up
+	 * @return if the file exists
+	 * @throws Exception
+	 */
+	private boolean fileExists(String fileName) throws Exception{
+		try{ // Horray
+			fis = new FileInputStream(fileName);
+			return true;
+		} catch(FileNotFoundException e){ // Damn
+			fis = new FileInputStream(NOTFOUND);
+			return false;
+		}
+	}
+	
+	
 	/**
 	 * Returns the related MIME type given a file name.
 	 * 
@@ -148,6 +171,32 @@ public class HttpRequest implements Runnable{
 		}
 		return "application/octet-stream";
 	}
+	
+	
+	/**
+	 * Sends the response to the user, starting with status and content type
+	 * lines.
+	 * 
+	 * @param statusLine - response status line
+	 * @param contentTypeLine - response content type
+	 * @throws Exception
+	 */
+	private void sendResponse(String statusLine, String contentTypeLine) throws
+	Exception{
+		System.out.println("\nResponse:\n========");
+		
+		System.out.println("Writing status line");
+		System.out.println(statusLine);
+		os.writeBytes(statusLine);
+		
+		System.out.println("Writing content type");
+		System.out.println(contentTypeLine);
+		os.writeBytes(contentTypeLine);
+		
+		os.writeBytes(CRLF);
+		sendBytes(fis, os);
+	}
+	
 	
 	/**
 	 * Given a FileInputStream and DataOutputStream, the FIS reads in the data
@@ -165,6 +214,19 @@ public class HttpRequest implements Runnable{
 		while((bytes = fis.read(buffer)) != -1){
 			os.write(buffer, 0, bytes);
 		}
-		
+	}
+	
+	/**
+	 * Shut down the socket, it's no longer needed.
+	 * @param br - buffered reader.
+	 * @throws Exception
+	 */
+	private void close(BufferedReader br) throws Exception{
+		// Close everything
+		fis.close();
+		br.close();
+		os.close();
+		System.out.println("Closing socket");
+		socket.close();
 	}
 }
