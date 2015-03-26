@@ -100,9 +100,11 @@ public class HttpRequest implements Runnable{
 	 */
 	private String readRequest(BufferedReader br) throws Exception{
 		String requestLine = br.readLine();
+		
 		System.out.println("\nRequest Line:\n========");
 		System.out.println(requestLine);
 		System.out.println("\nHeader Lines:\n========");
+		
 		String headerLine = br.readLine();
 		while(!headerLine.equals("")){
 			System.out.println(headerLine);
