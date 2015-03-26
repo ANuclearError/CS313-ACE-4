@@ -36,12 +36,14 @@ public class Server {
 	 */
 	public void run(){
 		new Thread(webServer).start();
-		while(true){
-			if(io.getQuit()){
+		
+		while(true) {
+			if(io.getQuit()) {
 				webServer.quit();
 				break;
 			}
 		}
+		
 		System.out.println("Closing system");
 		System.exit(0);
 	}

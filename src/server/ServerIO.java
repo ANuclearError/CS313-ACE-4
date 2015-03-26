@@ -11,7 +11,7 @@ import java.util.Scanner;
  * @since 0.3
  *
  */
-public class ServerIO{
+public class ServerIO {
 
 	/**
 	 * The scanner used for interpreting the user input
@@ -21,7 +21,7 @@ public class ServerIO{
 	/**
 	 * Constructor
 	 */
-	public ServerIO(){
+	public ServerIO() {
 		scanner = new Scanner(System.in);
 	}
 	
@@ -29,14 +29,15 @@ public class ServerIO{
 	 * Returns whether the user's latest input is "quit".
 	 * @return input == "quit"
 	 */
-	public boolean getQuit(){
-		try{
+	public boolean getQuit() {
+		try {
 			String input = scanner.nextLine().toLowerCase(); //Get user input
 			
-			if(input.equals("quit")){
+			if(input.equals("quit")) {
 				return true;
 			}
-		} catch (Exception e){ // TODO Add better exception handling.
+			
+		} catch (Exception e) { // TODO Add better exception handling.
 			System.out.println("Shit");
 		}
 		return false;

@@ -50,7 +50,7 @@ public final class WebServer implements Runnable {
 	/**
 	 * Creates a new ServerSocket and thread pool.
 	 */
-	private void open(){
+	private void open() {
 		try {
 			socket = new ServerSocket(PORT);
 			System.out.println("Opening server");
@@ -64,8 +64,8 @@ public final class WebServer implements Runnable {
 	/**
 	 * Starts a loop that allows for the socket to accept requests constantly.
 	 */
-	private void listen(){
-		while(running){
+	private void listen() {
+		while(running) {
 			try {
 				Socket client = socket.accept(); // Connection found
 				System.out.println("\nConnection found");				
@@ -96,7 +96,7 @@ public final class WebServer implements Runnable {
 	 * When invoked, sets the running flag to alert that the server is to be
 	 * closed.
 	 */
-	public void quit(){
+	public void quit() {
 		running = false;
 	}
 }

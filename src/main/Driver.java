@@ -17,7 +17,7 @@ public class Driver {
 	 * Main method, sets up everything for us.
 	 * @param args - command line arguments
 	 */
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		Server server = new Server();
 		server.run();
 	}

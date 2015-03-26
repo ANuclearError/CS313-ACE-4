@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
@@ -19,7 +20,7 @@ import java.util.StringTokenizer;
  * @since 0.2
  *
  */
-public class HttpRequest implements Runnable{
+public class HttpRequest implements Runnable {
 	
 	/**
 	 * Ensures proper returns when sending data over.
@@ -45,27 +46,27 @@ public class HttpRequest implements Runnable{
 	/**
 	 * Output stream for sending responses
 	 */
-	private DataOutputStream os;
+	private DataOutputStream dos;
 	
 	/**
 	 * The client being processed.
 	 */
-	Socket socket;
+	private Socket socket;
 	
 	/**
 	 * Constructor
 	 * @param socket - the connecting socket
 	 * @throws Exception
 	 */
-	public HttpRequest(Socket socket) throws Exception{
+	public HttpRequest(Socket socket) throws Exception {
 		this.socket = socket;
 	}
 
 	@Override
 	public void run() {
-		try{
+		try {
 			processRequest();
-		} catch (Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -74,8 +75,9 @@ public class HttpRequest implements Runnable{
 	 * The request is handled here, executing the server side stuff.
 	 * @throws Exception
 	 */
-	private void processRequest() throws Exception{
-		os = new DataOutputStream(socket.getOutputStream());
+	private void processRequest() throws Exception {
+		OutputStream os = socket.getOutputStream();
+		dos = new DataOutputStream(os);
 		InputStream is = socket.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
 		
@@ -98,7 +100,7 @@ public class HttpRequest implements Runnable{
 	 * @return requestLine
 	 * @throws Exception
 	 */
-	private String readRequest(BufferedReader br) throws Exception{
+	private String readRequest(BufferedReader br) throws Exception {
 		String requestLine = br.readLine();
 		
 		System.out.println("\nRequest Line:\n========");
@@ -106,7 +108,7 @@ public class HttpRequest implements Runnable{
 		System.out.println("\nHeader Lines:\n========");
 		
 		String headerLine = br.readLine();
-		while(!headerLine.equals("")){
+		while(!headerLine.equals("")) {
 			System.out.println(headerLine);
 			headerLine = br.readLine();
 		}
@@ -119,12 +121,13 @@ public class HttpRequest implements Runnable{
 	 * @param requestLine - the request line containing the file name.
 	 * @return fileName
 	 */
-	private String getFileName(String requestLine){
+	private String getFileName(String requestLine) {
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip method
 		String fileName = tokens.nextToken();
-		if(fileName.equals("/"))
+		if(fileName.equals("/")) {
 			fileName = INDEX;
+		}
 		return fileName;
 	}
 	
@@ -142,10 +145,10 @@ public class HttpRequest implements Runnable{
 		
 		boolean fileExists = fileExists(fileName);
 		
-		if(fileExists){
+		if(fileExists) {
 			statusLine = "HTTP/1.1 200 OK";
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
-		} else{
+		} else {
 			statusLine = "HTTP/1.1 404 Not Found";
 			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
 		}
@@ -165,11 +168,11 @@ public class HttpRequest implements Runnable{
 	 * @return if the file exists
 	 * @throws Exception
 	 */
-	private boolean fileExists(String fileName) throws Exception{
-		try{ // Horray
+	private boolean fileExists(String fileName) throws Exception {
+		try { // Horray
 			fis = new FileInputStream(fileName);
 			return true;
-		} catch(FileNotFoundException e){ // Damn
+		} catch(FileNotFoundException e) { // Damn
 			fis = new FileInputStream(NOTFOUND);
 			return false;
 		}
@@ -182,8 +185,8 @@ public class HttpRequest implements Runnable{
 	 * @param fileName - the file whose MIME type is to be determined
 	 * @return MIME type
 	 */
-	private String contentType(String fileName){
-		if(fileName.endsWith(".htm") || fileName.endsWith(".html")){
+	private String contentType(String fileName) {
+		if(fileName.endsWith(".htm") || fileName.endsWith(".html")) {
 			return "text/html";
 		}
 		return "application/octet-stream";
@@ -194,24 +197,23 @@ public class HttpRequest implements Runnable{
 	 * Sends the response to the user, starting with status and content type
 	 * lines.
 	 * 
-	 * @param statusLine - response status line
-	 * @param contentTypeLine - response content type
+	 * @param status - response status line
+	 * @param content - response content type
 	 * @throws Exception
 	 */
-	private void sendResponse(String statusLine, String contentTypeLine) throws
-	Exception{
+	private void sendResponse(String status, String content) throws Exception {
 		System.out.println("\nResponse:\n========");
 		
 		System.out.println("Writing status line");
-		System.out.println(statusLine);
-		os.writeBytes(statusLine);
+		System.out.println(status);
+		dos.writeBytes(status);
 		
 		System.out.println("Writing content type");
-		System.out.println(contentTypeLine);
-		os.writeBytes(contentTypeLine);
+		System.out.println(content);
+		dos.writeBytes(content);
 		
-		os.writeBytes(CRLF);
-		sendBytes(fis, os);
+		dos.writeBytes(CRLF);
+		sendBytes();
 	}
 	
 	
@@ -223,13 +225,13 @@ public class HttpRequest implements Runnable{
 	 * @param os - what sends the data to the client
 	 * @throws Exception
 	 */
-	private void sendBytes(FileInputStream fis, DataOutputStream os) throws
+	private void sendBytes() throws
 	Exception {
 		byte[] buffer = new byte[1024];
 		int bytes = 0;
 		
-		while((bytes = fis.read(buffer)) != -1){
-			os.write(buffer, 0, bytes);
+		while((bytes = fis.read(buffer)) != -1) {
+			dos.write(buffer, 0, bytes);
 		}
 	}
 	
@@ -238,10 +240,10 @@ public class HttpRequest implements Runnable{
 	 * Shut down the socket, it's no longer needed.
 	 * @throws Exception
 	 */
-	private void close() throws Exception{
+	private void close() throws Exception {
 		// Close everything
 		fis.close();
-		os.close();
+		dos.close();
 		System.out.println("Closing socket");
 		socket.close();
 	}
