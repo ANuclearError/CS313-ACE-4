@@ -46,4 +46,10 @@ Finished:    17/03/2015
 		all I have is a web server. Which is kinda nice I suppose. Now I need
 		to make it a caching proxy server, horray.
 
+	v1.1 - 26/03/2015
+	
+		This was primarily just cleaning things up. Added a 404.html file since
+		it didn't seem right having it just be a string in the source. Plan now
+		is to include a logger to log everything being requested by clients.
+		
 --------------------------------------------------------------------------------
