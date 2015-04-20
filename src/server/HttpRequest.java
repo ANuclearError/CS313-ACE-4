@@ -7,7 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.Socket;
+import java.net.URL;
 import java.util.StringTokenizer;
 
 /**
@@ -16,7 +18,7 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 1.0
+ * @version 1.1
  * @since 0.2
  *
  */
@@ -41,7 +43,7 @@ public class HttpRequest implements Runnable {
 	/**
 	 * Input stream when receiving request
 	 */
-	private FileInputStream fis;
+	private InputStream fis;
 	
 	/**
 	 * Output stream for sending responses
@@ -84,7 +86,6 @@ public class HttpRequest implements Runnable {
 		String requestLine = readRequest(new BufferedReader(isr));
 		// Extract filename from the request line
 		String fileName = getFileName(requestLine);
-		fileName = "files/" + fileName;
 						
 		respond(fileName);
 		close();
@@ -170,10 +171,14 @@ public class HttpRequest implements Runnable {
 	 */
 	private boolean fileExists(String fileName) throws Exception {
 		try { // Horray
-			fis = new FileInputStream(fileName);
+			fis = new FileInputStream("files/" + fileName);
 			return true;
-		} catch(FileNotFoundException e) { // Damn
-			fis = new FileInputStream(NOTFOUND);
+		} catch(FileNotFoundException e) { // Forward
+			URL url = new URL(fileName);
+			HttpURLConnection connection =
+					(HttpURLConnection)url.openConnection();
+			
+			fis = connection.getInputStream();
 			return false;
 		}
 	}

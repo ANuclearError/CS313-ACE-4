@@ -44,12 +44,20 @@ Finished:    17/03/2015
 		Extensive refactoring of HttpRequest and the addition of an index.html
 		file just to makes thing a bit nicer and such. So right now pretty much
 		all I have is a web server. Which is kinda nice I suppose. Now I need
-		to make it a caching proxy server, horray.
-
-	v1.1 - 26/03/2015
-	
-		This was primarily just cleaning things up. Added a 404.html file since
-		it didn't seem right having it just be a string in the source. Plan now
-		is to include a logger to log everything being requested by clients.
+		to make it a caching proxy server, horray. Added a 404.html file since
+		it didn't seem right having it just be a string in the source.
 		
 --------------------------------------------------------------------------------
+
+Version 1.0: Caching and Forwarding Web Proxy Server
+Commenced:   20/04/2015 (Please don't murder me for the gap)
+Finished:    -
+
+--------------------------------------------------------------------------------
+	
+	v1.1 - 20/04/2015
+	
+		Added a basic forwarding system that works for basic pages. Images, CSS
+		and JavaScript are basically not going to happen though, bear that in
+		mind at this current stage. I need to add basic caching now before
+		making the proxy more sophisticated.
