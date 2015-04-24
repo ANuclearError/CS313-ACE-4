@@ -61,3 +61,9 @@ Finished:    -
 		and JavaScript are basically not going to happen though, bear that in
 		mind at this current stage. I need to add basic caching now before
 		making the proxy more sophisticated.
+	
+	v1.2 - 24/04/2015
+		
+		Better forwarding, can now forward images, stylesheets and scripts.
+		Having some issues with redirecting to 404 pages on a website and such
+		however, need to deal with that.

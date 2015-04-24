@@ -7,7 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.Socket;
+import java.net.URL;
 import java.util.StringTokenizer;
 
 /**
@@ -66,6 +68,8 @@ public class HttpRequest implements Runnable {
 	public void run() {
 		try {
 			processRequest();
+		} catch (NullPointerException e) {
+			System.out.println("We got a null in here, most likely a phantom socket.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -84,7 +88,6 @@ public class HttpRequest implements Runnable {
 		String requestLine = readRequest(new BufferedReader(isr));
 		// Extract filename from the request line
 		String fileName = getFileName(requestLine);
-						
 		respond(fileName);
 		close();
 	}
@@ -127,6 +130,8 @@ public class HttpRequest implements Runnable {
 		if(fileName.equals("/")) {
 			fileName = INDEX;
 		}
+		System.out.println("\nRequested URL:\n========");
+		System.out.println(fileName);
 		return fileName;
 	}
 	
@@ -147,12 +152,33 @@ public class HttpRequest implements Runnable {
 		if(fileExists) {
 			statusLine = "HTTP/1.1 200 OK";
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
+			sendResponse(statusLine, contentTypeLine);
 		} else {
-			statusLine = "HTTP/1.1 404 Not Found";
-			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
+			forward(fileName);
+		}
+	}
+	
+	private void forward(String fileName) throws Exception{
+		URL url = new URL(fileName);
+		HttpURLConnection connection = 
+				(HttpURLConnection) url.openConnection();
+		connection.setInstanceFollowRedirects(true);
+				
+		int responseCode = connection.getResponseCode();
+		
+		String statusLine = "HTTP/1.1 " + connection.getResponseCode() + " " + 
+				connection.getResponseMessage();
+		String contentTypeLine = "Content-type: " +
+				connection.getContentType() + CRLF;
+		
+		if(responseCode > 400 && responseCode < 600){
+			fis = connection.getErrorStream();
+		} else {
+			fis = connection.getInputStream();
 		}
 		
 		sendResponse(statusLine, contentTypeLine);
+
 	}
 	
 	
@@ -168,12 +194,10 @@ public class HttpRequest implements Runnable {
 	 * @throws Exception
 	 */
 	private boolean fileExists(String fileName) throws Exception {
-		System.out.println("Searching for " + fileName);
 		try { // Horray
 			fis = new FileInputStream("files/" + fileName);
 			return true;
 		} catch(FileNotFoundException e) { // Forward
-			fis = new FileInputStream(NOTFOUND);
 			return false;
 		}
 	}
