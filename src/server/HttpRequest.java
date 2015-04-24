@@ -107,7 +107,7 @@ public class HttpRequest implements Runnable {
 		System.out.println("\nHeader Lines:\n========");
 		
 		String headerLine = br.readLine();
-		while(!headerLine.equals("")) {
+		while(!headerLine.equals("") && !(headerLine == null)) {
 			System.out.println(headerLine);
 			headerLine = br.readLine();
 		}
