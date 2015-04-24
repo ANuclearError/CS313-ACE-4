@@ -7,9 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.Socket;
-import java.net.URL;
 import java.util.StringTokenizer;
 
 /**
@@ -170,15 +168,12 @@ public class HttpRequest implements Runnable {
 	 * @throws Exception
 	 */
 	private boolean fileExists(String fileName) throws Exception {
+		System.out.println("Searching for " + fileName);
 		try { // Horray
 			fis = new FileInputStream("files/" + fileName);
 			return true;
 		} catch(FileNotFoundException e) { // Forward
-			URL url = new URL(fileName);
-			HttpURLConnection connection =
-					(HttpURLConnection)url.openConnection();
-			
-			fis = connection.getInputStream();
+			fis = new FileInputStream(NOTFOUND);
 			return false;
 		}
 	}
