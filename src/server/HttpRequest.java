@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
 /**
@@ -154,7 +155,14 @@ public class HttpRequest implements Runnable {
 			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 			sendResponse(statusLine, contentTypeLine);
 		} else {
-			forward(fileName);
+			try{
+				forward(fileName);
+			} catch (UnknownHostException e){
+				statusLine = "HTTP/1.1 404 NOT FOUND";
+				contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
+				fis = new FileInputStream(NOTFOUND);
+				sendResponse(statusLine, contentTypeLine);
+			}
 		}
 	}
 	
