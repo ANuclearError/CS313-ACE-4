@@ -81,3 +81,9 @@ Finished:    -
 			- Characters like "?" will not cause the operating system to forbid
 			  the file from being created.
 			- Long URLs will be shortened while retaining uniqueness.
+	
+	v1.4 - 25/05/2015
+	
+		Restructure of the code saw generating the filename from the URL moved
+		into it's own method, and changed from using hash codes to back to just
+		using the URL instead using a regex to filter out the dodgy stuff.

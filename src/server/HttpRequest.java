@@ -21,7 +21,7 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 1.3
+ * @version 1.4
  * @since 0.2
  *
  */
@@ -116,6 +116,7 @@ public class HttpRequest implements Runnable {
 		System.out.println(requestLine);
 		System.out.println("\nHeader Lines:\n========");
 		
+		// Reading the header lines in one by one.
 		String headerLine = br.readLine();
 		while(!headerLine.equals("") && !(headerLine == null)) {
 			System.out.println(headerLine);
@@ -132,7 +133,7 @@ public class HttpRequest implements Runnable {
 	 */
 	private String getFileName(String requestLine) {
 		StringTokenizer tokens = new StringTokenizer(requestLine);
-		tokens.nextToken(); // skip method
+		tokens.nextToken(); // Ideally, I should be using this forwarding
 		String fileName = tokens.nextToken();
 		if(fileName.equals("/")) {
 			fileName = INDEX;
@@ -154,70 +155,52 @@ public class HttpRequest implements Runnable {
 		String statusLine = null;
 		String contentTypeLine = null;
 		
-		// Changes the requested file to ensure that we have something. If the
-		// URL is like "http://derp.com" we just assume to cache in index.html.
-		String fileLocation = "files/" + url.getHost();
-		if(url.getFile().equals("/") || url.getFile().equals("")){
-			fileLocation += "/index.html";
-		} else {
-			// Hash code ensures filename is valid and not ridiculously long.
-			fileLocation += "/" + url.getFile();
-		}
-		fileLocation = fileLocation.replaceAll("[^a-zA-Z0-9_\\-\\.\\/]", "_");
-		System.out.println("Searching for file: " + fileLocation);
-		boolean fileExists = fileExists(fileLocation);
-				
+		String fileName = urlToFilename(url);
+		boolean fileExists = fileExists(fileName);
+		
 		if(fileExists) {
 			System.out.println("Cached file found, sending to user");
 			statusLine = "HTTP/1.1 200 OK";
-			contentTypeLine = "Content-type: " + contentType(fileLocation) + CRLF;
+			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
 			sendResponse(statusLine, contentTypeLine, false);
 		} else {
 			System.out.println("Cached file not found, forwarding to server");
-			try{
-				File file = new File(fileLocation);
-				file.getParentFile().mkdirs();
-				file.createNewFile();
-				fos = new FileOutputStream(fileLocation);
-				forward(url);
-			} catch (UnknownHostException e){
-				statusLine = "HTTP/1.1 404 NOT FOUND";
-				contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
-				fis = new FileInputStream(NOTFOUND);
-				sendResponse(statusLine, contentTypeLine, false);
-				e.printStackTrace();
-			}
+			forward(url);
 		}
 	}
 	
-	
 	/**
-	 * Forwards a request from the user to the big bad internet if it cannot
-	 * find the requested URL locally.
-	 * @param url - the URL the user wants
-	 * @throws Exception
+	 * Converts a URL into a valid filename. This is done by removing http://
+	 * from the start of the string and changing any illegal character to a
+	 * placeholder, in the hopes that this doesn't accidentally cause two URLs
+	 * to map to the same file.
+	 * 
+	 * In the interest of ensuring platform independence, I'm playing it safe
+	 * with the whitelist of characters. File paths can only contain:
+	 * <li>
+	 * 	<ul>Alphanumeric characters<ul>
+	 *	<ul>.</ul>
+	 *	<ul>-</ul>
+	 *	<ul>_</ul>
+	 *	<ul>/</ul>
+	 * </li>
+	 * 
+	 * @param url - The URL to be converted
+	 * @return generated file path
 	 */
-	private void forward(URL url) throws Exception{
-		// Connect
-		HttpURLConnection connection = 
-				(HttpURLConnection) url.openConnection();
-		connection.setInstanceFollowRedirects(true);
-		
-		// Setting up the response
-		int responseCode = connection.getResponseCode();
-		String statusLine = "HTTP/1.1 " + connection.getResponseCode() + " " + 
-				connection.getResponseMessage();
-		String contentTypeLine = "Content-type: " +
-				connection.getContentType() + CRLF;
-		
-		// If the requests gets an error code back, then we use its error stream
-		// rather than its input stream so that the user can see whah happened.
-		if(responseCode > 400 && responseCode < 600){
-			fis = connection.getErrorStream();
+	private String urlToFilename(URL url){
+		String fileName = "files/" + url.getHost();
+		if(url.getFile().equals("/") || url.getFile().equals("")){
+			fileName += "/index.html";
 		} else {
-			fis = connection.getInputStream();
+			// Hash code ensures filename is valid and not ridiculously long.
+			fileName += "/" + url.getFile();
 		}
-		sendResponse(statusLine, contentTypeLine, true);
+		
+		// If this regex works 100% can I get more bonus marks?
+		fileName = fileName.replaceAll("[^a-zA-Z0-9_\\-\\.\\/]", "_");
+		System.out.println("Searching for file: " + fileName);
+		return fileName;
 	}
 	
 	
@@ -237,7 +220,54 @@ public class HttpRequest implements Runnable {
 			fis = new FileInputStream(fileName);
 			return true;
 		} catch(FileNotFoundException e) { // Forward and create files to cache
+			// Since it's evident the file doesn't exist, we need to create
+			// it
+			File file = new File(fileName);
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			fos = new FileOutputStream(fileName);
 			return false;
+		}
+	}
+	
+	
+	/**
+	 * Forwards a request from the user to the big bad internet if it cannot
+	 * find the requested URL locally.
+	 * @param url - the URL the user wants
+	 * @throws Exception
+	 */
+	private void forward(URL url) throws Exception{
+		String statusLine;
+		String contentTypeLine;
+		try{
+			// Connect
+			HttpURLConnection connection = 
+					(HttpURLConnection) url.openConnection();
+			connection.setInstanceFollowRedirects(true);
+			
+			// Setting up the response
+			int responseCode = connection.getResponseCode();
+			statusLine = "HTTP/1.1 " + connection.getResponseCode() + " " + 
+					connection.getResponseMessage();
+			contentTypeLine = "Content-type: " +
+					connection.getContentType() + CRLF;
+			
+			// If the requests gets an error code back, then we use its error stream
+			// rather than its input stream so that the user can see whah happened.
+			if(responseCode > 400 && responseCode < 600){
+				fis = connection.getErrorStream();
+			} else {
+				fis = connection.getInputStream();
+			}
+			sendResponse(statusLine, contentTypeLine, true);
+
+		} catch (UnknownHostException e){
+			statusLine = "HTTP/1.1 404 NOT FOUND";
+			contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
+			fis = new FileInputStream(NOTFOUND);
+			sendResponse(statusLine, contentTypeLine, false);
+			e.printStackTrace();
 		}
 	}
 	
@@ -300,14 +330,15 @@ public class HttpRequest implements Runnable {
 		byte[] buffer = new byte[1024];
 		int bytes = 0;
 		
-		System.out.println(cache);
+		if(cache){
+			System.out.println("Caching the output streaming");
+		}
 		while((bytes = fis.read(buffer)) != -1) {
 			dos.write(buffer, 0, bytes);
 			if(cache){
 				fos.write(buffer, 0, bytes);
 			}
 		}
-		
 	}	
 	
 	
