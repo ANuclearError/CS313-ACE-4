@@ -73,3 +73,11 @@ Finished:    -
 		Caching works. However, URLs that consist of illegal file characters
 		currently do not work now, need to deal with, seems they don't even
 		forward now, which is a bit annoying.
+		
+	v.1.31 - 25/05/2015
+	
+		Changed how saving the local file works, now the hash code of the url
+		is used for storage. This has advantages of:
+			- Characters like "?" will not cause the operating system to forbid
+			  the file from being created.
+			- Long URLs will be shortened while retaining uniqueness.

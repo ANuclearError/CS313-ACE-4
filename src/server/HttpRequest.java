@@ -21,7 +21,7 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 1.1
+ * @version 1.3
  * @since 0.2
  *
  */
@@ -155,28 +155,36 @@ public class HttpRequest implements Runnable {
 		String contentTypeLine = null;
 		
 		// Changes the requested file to ensure that we have something. If the
-		// URL is like "http://derp.com" we just assume to cache in index.html
-		String fileLocation = url.getHost();
+		// URL is like "http://derp.com" we just assume to cache in index.html.
+		String fileLocation = "files/" + url.getHost();
 		if(url.getFile().equals("/") || url.getFile().equals("")){
 			fileLocation += "/index.html";
 		} else {
-			fileLocation += url.getFile();
+			// Hash code ensures filename is valid and not ridiculously long.
+			fileLocation += "/" + url.getFile().hashCode();
 		}
+		System.out.println("Searching for file: " + fileLocation);
 		boolean fileExists = fileExists(fileLocation);
 				
-		System.out.println(fileExists);
 		if(fileExists) {
+			System.out.println("Cached file found, sending to user");
 			statusLine = "HTTP/1.1 200 OK";
 			contentTypeLine = "Content-type: " + contentType(fileLocation) + CRLF;
 			sendResponse(statusLine, contentTypeLine, false);
 		} else {
+			System.out.println("Cached file not found, forwarding to server");
 			try{
+				File file = new File(fileLocation);
+				file.getParentFile().mkdirs();
+				file.createNewFile();
+				fos = new FileOutputStream(fileLocation);
 				forward(url);
 			} catch (UnknownHostException e){
 				statusLine = "HTTP/1.1 404 NOT FOUND";
 				contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
 				fis = new FileInputStream(NOTFOUND);
 				sendResponse(statusLine, contentTypeLine, false);
+				e.printStackTrace();
 			}
 		}
 	}
@@ -224,15 +232,10 @@ public class HttpRequest implements Runnable {
 	 * @throws Exception
 	 */
 	private boolean fileExists(String fileName) throws Exception {
-		fileName = "files/" + fileName;
 		try { // Horray
 			fis = new FileInputStream(fileName);
 			return true;
 		} catch(FileNotFoundException e) { // Forward and create files to cache
-			File file = new File(fileName);
-			file.getParentFile().mkdirs();
-			file.createNewFile();
-			fos = new FileOutputStream(fileName);
 			return false;
 		}
 	}
@@ -303,6 +306,7 @@ public class HttpRequest implements Runnable {
 				fos.write(buffer, 0, bytes);
 			}
 		}
+		
 	}	
 	
 	
@@ -314,8 +318,6 @@ public class HttpRequest implements Runnable {
 		// Close everything
 		fis.close();
 		dos.close();
-		fos.flush();
-		fos.close();
 		System.out.println("Closing socket");
 		socket.close();
 	}
