@@ -161,8 +161,9 @@ public class HttpRequest implements Runnable {
 			fileLocation += "/index.html";
 		} else {
 			// Hash code ensures filename is valid and not ridiculously long.
-			fileLocation += "/" + url.getFile().hashCode();
+			fileLocation += "/" + url.getFile();
 		}
+		fileLocation = fileLocation.replaceAll("[^a-zA-Z0-9_\\-\\.\\/]", "_");
 		System.out.println("Searching for file: " + fileLocation);
 		boolean fileExists = fileExists(fileLocation);
 				
