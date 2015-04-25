@@ -67,3 +67,9 @@ Finished:    -
 		Better forwarding, can now forward images, stylesheets and scripts.
 		Having some issues with redirecting to 404 pages on a website and such
 		however, need to deal with that.
+		
+	v1.3 - 25/05/2015
+	
+		Caching works. However, URLs that consist of illegal file characters
+		currently do not work now, need to deal with, seems they don't even
+		forward now, which is a bit annoying.

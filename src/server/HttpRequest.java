@@ -2,8 +2,10 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -57,6 +59,11 @@ public class HttpRequest implements Runnable {
 	private Socket socket;
 	
 	/**
+	 * The output stream we are to cache the file with, if that is needed.
+	 */
+	private FileOutputStream fos;
+	
+	/**
 	 * Constructor
 	 * @param socket - the connecting socket
 	 * @throws Exception
@@ -69,8 +76,6 @@ public class HttpRequest implements Runnable {
 	public void run() {
 		try {
 			processRequest();
-		} catch (NullPointerException e) {
-			System.out.println("We got a null in here, most likely a phantom socket.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -89,7 +94,8 @@ public class HttpRequest implements Runnable {
 		String requestLine = readRequest(new BufferedReader(isr));
 		// Extract filename from the request line
 		String fileName = getFileName(requestLine);
-		respond(fileName);
+		URL url = new URL(fileName);
+		respond(url);
 		close();
 	}
 	
@@ -144,49 +150,65 @@ public class HttpRequest implements Runnable {
 	 * @param fileName
 	 * @throws Exception
 	 */
-	private void respond(String fileName) throws Exception{
+	private void respond(URL url) throws Exception{
 		String statusLine = null;
 		String contentTypeLine = null;
 		
-		boolean fileExists = fileExists(fileName);
-		
+		// Changes the requested file to ensure that we have something. If the
+		// URL is like "http://derp.com" we just assume to cache in index.html
+		String fileLocation = url.getHost();
+		if(url.getFile().equals("/") || url.getFile().equals("")){
+			fileLocation += "/index.html";
+		} else {
+			fileLocation += url.getFile();
+		}
+		boolean fileExists = fileExists(fileLocation);
+				
+		System.out.println(fileExists);
 		if(fileExists) {
 			statusLine = "HTTP/1.1 200 OK";
-			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
-			sendResponse(statusLine, contentTypeLine);
+			contentTypeLine = "Content-type: " + contentType(fileLocation) + CRLF;
+			sendResponse(statusLine, contentTypeLine, false);
 		} else {
 			try{
-				forward(fileName);
+				forward(url);
 			} catch (UnknownHostException e){
 				statusLine = "HTTP/1.1 404 NOT FOUND";
 				contentTypeLine = "Content-type: " + contentType(NOTFOUND) + CRLF;
 				fis = new FileInputStream(NOTFOUND);
-				sendResponse(statusLine, contentTypeLine);
+				sendResponse(statusLine, contentTypeLine, false);
 			}
 		}
 	}
 	
-	private void forward(String fileName) throws Exception{
-		URL url = new URL(fileName);
+	
+	/**
+	 * Forwards a request from the user to the big bad internet if it cannot
+	 * find the requested URL locally.
+	 * @param url - the URL the user wants
+	 * @throws Exception
+	 */
+	private void forward(URL url) throws Exception{
+		// Connect
 		HttpURLConnection connection = 
 				(HttpURLConnection) url.openConnection();
 		connection.setInstanceFollowRedirects(true);
-				
-		int responseCode = connection.getResponseCode();
 		
+		// Setting up the response
+		int responseCode = connection.getResponseCode();
 		String statusLine = "HTTP/1.1 " + connection.getResponseCode() + " " + 
 				connection.getResponseMessage();
 		String contentTypeLine = "Content-type: " +
 				connection.getContentType() + CRLF;
 		
+		// If the requests gets an error code back, then we use its error stream
+		// rather than its input stream so that the user can see whah happened.
 		if(responseCode > 400 && responseCode < 600){
 			fis = connection.getErrorStream();
 		} else {
 			fis = connection.getInputStream();
 		}
-		
-		sendResponse(statusLine, contentTypeLine);
-
+		sendResponse(statusLine, contentTypeLine, true);
 	}
 	
 	
@@ -202,10 +224,15 @@ public class HttpRequest implements Runnable {
 	 * @throws Exception
 	 */
 	private boolean fileExists(String fileName) throws Exception {
+		fileName = "files/" + fileName;
 		try { // Horray
-			fis = new FileInputStream("files/" + fileName);
+			fis = new FileInputStream(fileName);
 			return true;
-		} catch(FileNotFoundException e) { // Forward
+		} catch(FileNotFoundException e) { // Forward and create files to cache
+			File file = new File(fileName);
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			fos = new FileOutputStream(fileName);
 			return false;
 		}
 	}
@@ -221,6 +248,12 @@ public class HttpRequest implements Runnable {
 		if(fileName.endsWith(".htm") || fileName.endsWith(".html")) {
 			return "text/html";
 		}
+		if(fileName.endsWith(".js")) {
+			return "text/javascript";
+		}
+		if(fileName.endsWith(".css")) {
+			return "text/css";
+		}
 		return "application/octet-stream";
 	}
 	
@@ -233,7 +266,8 @@ public class HttpRequest implements Runnable {
 	 * @param content - response content type
 	 * @throws Exception
 	 */
-	private void sendResponse(String status, String content) throws Exception {
+	private void sendResponse(String status, String content, boolean cache)
+	throws Exception {
 		System.out.println("\nResponse:\n========");
 		
 		System.out.println("Writing status line");
@@ -245,7 +279,7 @@ public class HttpRequest implements Runnable {
 		dos.writeBytes(content);
 		
 		dos.writeBytes(CRLF);
-		sendBytes();
+		sendBytes(cache);
 	}
 	
 	
@@ -257,15 +291,19 @@ public class HttpRequest implements Runnable {
 	 * @param os - what sends the data to the client
 	 * @throws Exception
 	 */
-	private void sendBytes() throws
+	private void sendBytes(boolean cache) throws
 	Exception {
 		byte[] buffer = new byte[1024];
 		int bytes = 0;
 		
+		System.out.println(cache);
 		while((bytes = fis.read(buffer)) != -1) {
 			dos.write(buffer, 0, bytes);
+			if(cache){
+				fos.write(buffer, 0, bytes);
+			}
 		}
-	}
+	}	
 	
 	
 	/**
@@ -276,6 +314,8 @@ public class HttpRequest implements Runnable {
 		// Close everything
 		fis.close();
 		dos.close();
+		fos.flush();
+		fos.close();
 		System.out.println("Closing socket");
 		socket.close();
 	}
