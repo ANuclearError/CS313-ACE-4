@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
@@ -76,6 +78,12 @@ public class HttpRequest implements Runnable {
 	public void run() {
 		try {
 			processRequest();
+		} catch (NullPointerException e) {
+			System.out.println("We found ourselves a null request here.");
+		} catch (SocketException e){
+			System.out.println("Socket seemed to have been lost.");
+		} catch(MalformedURLException e){
+			System.out.println(e.getMessage() + " can't be accessed.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -194,7 +202,7 @@ public class HttpRequest implements Runnable {
 			fileName += "/index.html";
 		} else {
 			// Hash code ensures filename is valid and not ridiculously long.
-			fileName += "/" + url.getFile();
+			fileName += url.getFile();
 		}
 		
 		// If this regex works 100% can I get more bonus marks?
@@ -242,10 +250,9 @@ public class HttpRequest implements Runnable {
 		String contentTypeLine;
 		try{
 			// Connect
-			HttpURLConnection connection = 
+			HttpURLConnection connection =
 					(HttpURLConnection) url.openConnection();
 			connection.setInstanceFollowRedirects(true);
-			
 			// Setting up the response
 			int responseCode = connection.getResponseCode();
 			statusLine = "HTTP/1.1 " + connection.getResponseCode() + " " + 

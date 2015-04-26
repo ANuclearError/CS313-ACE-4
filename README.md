@@ -17,8 +17,12 @@ To see the version history of this project, see VERSIONHISTORY.TXT for more
 information.
 
 ###Submission Info###
+The submission of this assignment comes with the src file, jar, readme and the
+version history files. Due to the nature of the assignment, there is no need for
+including the cache folder since it will be created during it's use.
 
 ###Output Example###
+When you see this run, you'll see why I'm not including one here.
 
 ###License###
 Copyright 2014 

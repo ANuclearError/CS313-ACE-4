@@ -87,3 +87,8 @@ Finished:    -
 		Restructure of the code saw generating the filename from the URL moved
 		into it's own method, and changed from using hash codes to back to just
 		using the URL instead using a regex to filter out the dodgy stuff.
+		
+	v1.5 - 26/05/2015
+	
+		Tidied stuff up, I think this is done as good as I can make it. It
+		caches, it proxies, standard websites work without a huff.
