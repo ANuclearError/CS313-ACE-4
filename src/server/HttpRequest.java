@@ -23,7 +23,7 @@ import java.util.StringTokenizer;
  * multithreaded so that multiple requests can be handled simultaneously.
  * 
  * @author Aidan O'Grady
- * @version 1.4
+ * @version 1.5
  * @since 0.2
  *
  */
