@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -84,6 +85,8 @@ public class HttpRequest implements Runnable {
 			System.out.println("Socket seemed to have been lost.");
 		} catch(MalformedURLException e){
 			System.out.println(e.getMessage() + " can't be accessed.");
+		} catch(IOException e){
+			System.out.println("There was an IO issue, cache filename is likely too long.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
