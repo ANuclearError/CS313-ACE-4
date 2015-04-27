@@ -2,8 +2,8 @@ CS313-ACE-4
 ===========
 ##
 ###Synopsis###
-The purpose of this project is to create a multithreaded multimedia web server in
-Java.
+The purpose of this project is to create a multithreaded caching and proxy web
+server in Java.
 
 ###Author###
 Aidan O'Grady (Reg No. 201218150) - wlb12153@uni.strath.ac.uk
@@ -18,14 +18,13 @@ information.
 
 ###Submission Info###
 The submission of this assignment comes with the src file, jar, readme and the
-version history files. Due to the nature of the assignment, there is no need for
-including the cache folder since it will be created during it's use.
+version history files.
 
 ###Output Example###
 When you see this run, you'll see why I'm not including one here.
 
 ###License###
-Copyright 2014 
+Copyright 2015
 
 This project can not be copied and/or distributed without the express permission
 of the authors.

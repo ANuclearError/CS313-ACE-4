@@ -88,7 +88,8 @@ public class HttpRequest implements Runnable {
 		} catch(IOException e){
 			System.out.println("There was an IO issue, cache filename is likely too long.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("Other exception: " + e.getMessage());
+			System.out.println("Just gonna sweep that under the carpet.");
 		}
 	}
 
